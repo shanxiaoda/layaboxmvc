@@ -1,0 +1,77 @@
+package mvc
+{
+	public class App
+	{
+		public function App(){
+		
+		}
+		
+		private static var CMDMap:Object = {};
+		public static function registerCommand(command:String,commandClass:Class):void{
+			CMDMap[command] = commandClass;
+		}
+		
+		public static function executeCommand(command:String):void{
+			var commandClass:Class = CMDMap[command];
+			executeCommandByClass(commandClass);
+			commandClass = null;
+		}
+		
+		public static function executeCommandByClass(commandClass:Class,data:Object = null):void {
+			var cmd:Command = new commandClass() as Command;
+			if( data == null ){
+				cmd.execute();
+			}else{
+				cmd.executeByObj(data);
+			}
+			cmd = null;
+			commandClass = null;
+		}
+		
+		public static var actionMap:Object = {};
+		public static var actionKeyMap:Object = {};
+    
+		public static function regAction(actionId:int,actionClass:Class):void {
+			var action:Action = new actionClass();
+			action.setActionId(actionId);
+			actionMap[actionId] = action;
+			var key:String = getInjectionName(action);
+			actionKeyMap[key] = action;
+		}
+		
+		public static function getAction(actionId:int):Action {
+			return actionMap[actionId];
+		}
+		
+		public static var sessionMap:Object = {};
+		public static function regSession(sessionClass:Class):void {
+			var session:Session = new sessionClass();
+			var key:String = getInjectionName(session);
+			sessionMap[key] = session;
+		}
+		
+		public static function getInjectionName(instance:*):String{
+			var str:String = getInstanceClassName(instance);
+			return str.charAt(0).toLocaleLowerCase() + str.substr(1);
+		}
+		
+		public static function getInstanceClassName(instance:*):String{
+			return instance["__proto__"]["__class"]["name"];
+		}
+		
+		public static function getSession(key:String):Session{
+			return sessionMap[key];
+		}
+		
+		public static function sendCMD(cmd:String,obj:Object = null):void
+		{
+			if( CMDMap[cmd] != null ){
+				var commandClass:Class = CMDMap[cmd];
+				var command:Command = new commandClass() as Command;
+				command.executeByObj(obj);
+				commandClass = null;
+				command = null;
+			}
+		}
+	}
+}
